@@ -2,7 +2,7 @@
 import struct
 import io
 import builtins
-from _lzo import *
+from _minilzo import *
 
 __all__ = ["LzoFile", "open"]
 

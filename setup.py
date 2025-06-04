@@ -10,7 +10,7 @@ extra_compile_args = []
 extra_link_args = []
 
 ext = Extension(
-    name="_lzo",
+    name="_minilzo",
     sources=["lzomodule.c", "minilzo.c"],
     include_dirs=include_dirs,
     define_macros=define_macros,
@@ -22,8 +22,15 @@ ext = Extension(
     extra_link_args=extra_link_args,
 )
 
-setup(name='python-lzo',
+setup(name='minilzo',
       version='1.0',
-      description='This is a demo package',
-      py_modules=['lzo'],
+      description='This is a python library deals with lzo files compressed with lzop.',
+      long_description=open('README', 'r').read(),
+      url='https://github.com/Myldero/python-minilzo',
+      classifiers=[
+          "Programming Language :: Python :: 3",
+          "Programming Language :: C",
+      ],
+      py_modules=['minilzo'],
       ext_modules=[ext])
+

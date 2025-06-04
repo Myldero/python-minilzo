@@ -9,18 +9,18 @@ One possible usage is unpack Android(linux) kernel boot.img. And actually it's w
 ##Usage##
 You can use it as command line tools:
 
-    python lzo.py file_to_compress
+    python minilzo.py file_to_compress
 
 Or import it into your script
 
-    import lzo
-    f = lzo.open('compressed.lzo', 'wb')
+    import minilzo
+    f = minilzo.open('compressed.lzo', 'wb')
     data = #some data
     f.write(data)
 
 Open boot.img:
 
-    import lzo
+    from minilzo import LzoFile
     f = open('boot.img', 'rb')
     f.seek(#calculate your offset)
     LzoFile(fileobj=f, mode = 'rb')

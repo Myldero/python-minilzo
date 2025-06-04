@@ -172,7 +172,7 @@ decompress_block(PyObject *dummy, PyObject *args)
 }
 
 static PyObject *
-py_lzo_adler32(PyObject *dummy, PyObject *args)
+py_minilzo_adler32(PyObject *dummy, PyObject *args)
 {
   lzo_uint32 value = 1;
   const lzo_bytep in;
@@ -194,7 +194,7 @@ py_lzo_adler32(PyObject *dummy, PyObject *args)
 
 #ifdef USE_LIBLZO
 static PyObject *
-py_lzo_crc32(PyObject *dummy, PyObject *args)
+py_minilzo_crc32(PyObject *dummy, PyObject *args)
 {
   lzo_uint32 value;
   const lzo_bytep in;
@@ -223,9 +223,9 @@ static /* const */ PyMethodDef methods[] =
 {
     {"compress_block", (PyCFunction)compress_block, METH_VARARGS, compress__doc__},
     {"decompress_block", (PyCFunction)decompress_block, METH_VARARGS, decompress__doc__},
-    {"lzo_adler32", (PyCFunction)py_lzo_adler32, METH_VARARGS, lzo_adler32__doc__},
+    {"lzo_adler32", (PyCFunction)py_minilzo_adler32, METH_VARARGS, lzo_adler32__doc__},
 #ifdef USE_LIBLZO
-    {"lzo_crc32", (PyCFunction)py_lzo_crc32, METH_VARARGS, decompress__doc__},
+    {"lzo_crc32", (PyCFunction)py_minilzo_crc32, METH_VARARGS, decompress__doc__},
 #endif
     {NULL, NULL, 0, NULL}
 };
@@ -238,22 +238,22 @@ static /* const */ char module_documentation[]=
 
 
 #if PY_MAJOR_VERSION >= 3
-static struct PyModuleDef _lzo = {
+static struct PyModuleDef _minilzo = {
     PyModuleDef_HEAD_INIT,
-    "_lzo",
+    "_minilzo",
     module_documentation,
     -1,
     methods
 };
-PyMODINIT_FUNC PyInit__lzo() {
-    return PyModule_Create(&_lzo);
+PyMODINIT_FUNC PyInit__minilzo() {
+    return PyModule_Create(&_minilzo);
 }
 #endif
 
 #ifdef _MSC_VER
 _declspec(dllexport)
 #endif
-void init_lzo(void)
+void init_minilzo(void)
 {
     PyObject *m, *d, *v;
     if (lzo_init() != LZO_E_OK)
@@ -261,14 +261,14 @@ void init_lzo(void)
         return;
     }
 #if PY_MAJOR_VERSION >= 3
-    m = PyInit__lzo();
+    m = PyInit__minilzo();
 #else
-    m = Py_InitModule("_lzo", methods, module_documentation,
+    m = Py_InitModule("_minilzo", methods, module_documentation,
                        NULL, PYTHON_API_VERSION);
 #endif
     d = PyModule_GetDict(m);
 
-    LzoError = PyErr_NewException("_lzo.error", NULL, NULL);
+    LzoError = PyErr_NewException("_minilzo.error", NULL, NULL);
     PyDict_SetItemString(d, "error", LzoError);
 #if PY_MAJOR_VERSION >= 3
 #define PyString_FromString PyUnicode_FromString

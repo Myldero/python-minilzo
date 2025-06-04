@@ -1,3 +1,6 @@
 build/
 env/
 *.pyc
+
+dist/
+minilzo.egg-info/
