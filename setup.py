@@ -22,15 +22,22 @@ ext = Extension(
     extra_link_args=extra_link_args,
 )
 
-setup(name='minilzo',
-      version='1.0',
-      description='This is a python library deals with lzo files compressed with lzop.',
-      long_description=open('README', 'r').read(),
-      url='https://github.com/Myldero/python-minilzo',
-      classifiers=[
-          "Programming Language :: Python :: 3",
-          "Programming Language :: C",
-      ],
-      py_modules=['minilzo'],
-      ext_modules=[ext])
+setup(
+    name='minilzo',
+    version='1.0',
+    description='This is a python library deals with lzo files compressed with lzop.',
+    long_description=open('README', 'r').read(),
+    long_description_content_type='text/markdown',
+    license=open('COPYING', 'r').read(),
+    author="ir193",
+    author_email="iridiummx@gmail.com",
+    maintainer="Myldero",
+    url='https://github.com/Myldero/python-minilzo',
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "Programming Language :: C",
+    ],
+    python_requires=">=3",
+    py_modules=['minilzo'],
+    ext_modules=[ext])
 
