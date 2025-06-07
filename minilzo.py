@@ -189,11 +189,10 @@ class LzoFile(io.BufferedIOBase):
                 raise IOError('3')
 
         self.method = self._read8_c()
-        assert(self.method == LZO1X)
+        assert(self.method <= 3)
 
         if self.version >= 0x0940:
             self.level = self._read8_c()
-            assert(self.level == 1)
 
         self.flags = self._read32_c()
 
