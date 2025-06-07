@@ -24,8 +24,8 @@ ext = Extension(
 
 setup(
     name='minilzo',
-    version='1.0',
-    description='This is a python library deals with lzo files compressed with lzop.',
+    version='1.1',
+    description='This is a python library that deals with lzo files compressed with lzop.',
     long_description=open('README', 'r').read(),
     long_description_content_type='text/markdown',
     license=open('COPYING', 'r').read(),

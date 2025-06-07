@@ -4,7 +4,7 @@ import io
 import builtins
 from _minilzo import *
 
-__all__ = ["LzoFile", "open"]
+__all__ = ["LzoFile", "open", "compress", "decompress", "adler32"]
 
 MAGIC = b"\x89\x4C\x5A\x4F\x00\x0D\x0A\x1A\x0A"
 
@@ -16,6 +16,7 @@ CRC32_INIT_VALUE = 0
 
 LZOP_VERSION = 0x1030
 LZO_LIB_VERSION = 0x0940
+LZO1X = 1
 
 
 BLOCK_SIZE = (128*1024)
@@ -44,13 +45,13 @@ def open(filename, mode):
 class LzoFile(io.BufferedIOBase):
 
     def __init__(self, filename=None, mode=None,
-                 compresslevel=None, fileobj=None, mtime=None, verify_checksum=True):
+                 fileobj=None, mtime=None, verify_checksum=True):
         """Constructor for the LzoFile class.
 
         At least one of fileobj and filename must be given a
         non-trivial value.
 
-        The compresslevel and mtime attribute is not supported so far
+        The mtime attribute is not supported so far
 
         The new class instance is based on fileobj, which can be a regular
         file, a StringIO object, or any other object which simulates a file.
@@ -109,7 +110,7 @@ class LzoFile(io.BufferedIOBase):
             self.version = LZOP_VERSION
             self.libver = LZO_LIB_VERSION
 
-            self.method = 1             # TODO: three methods
+            self.method = LZO1X
             self.level = 1
 
             self.flags = 0
@@ -123,7 +124,7 @@ class LzoFile(io.BufferedIOBase):
             self.mtime_low = 0
             self.mtime_high = 0
 
-            self.name = filename
+            self.name = filename.encode()
 
             self._write_magic()
             self._write_header()
@@ -166,7 +167,6 @@ class LzoFile(io.BufferedIOBase):
 
     def _read_magic(self):
         # XXX TODO: figure out why fails
-        MAGIC = b"\x89\x4C\x5A\x4F\x00\x0D\x0A\x1A\x0A"
         magic = self.fileobj.read(len(MAGIC))
 
         if magic == MAGIC:
@@ -189,10 +189,11 @@ class LzoFile(io.BufferedIOBase):
                 raise IOError('3')
 
         self.method = self._read8_c()
-        assert(self.method in [1,2,3])
+        assert(self.method == LZO1X)
 
         if self.version >= 0x0940:
             self.level = self._read8_c()
+            assert(self.level == 1)
 
         self.flags = self._read32_c()
 
@@ -256,17 +257,17 @@ class LzoFile(io.BufferedIOBase):
 
 
         if src_len < dst_len:
-            uncompressed = decompress_block(block, dst_len)
+            uncompressed = decompress(block, dst_len)
         else:
             uncompressed = block
 
         if self.verify_checksum:
             if self.flags & F_ADLER32_C:
-                checksum = lzo_adler32(block, ADLER32_INIT_VALUE);
+                checksum = adler32(block, ADLER32_INIT_VALUE);
                 assert checksum == c_adler32
 
             if self.flags & F_ADLER32_D:
-                checksum = lzo_adler32(uncompressed, ADLER32_INIT_VALUE);
+                checksum = adler32(uncompressed, ADLER32_INIT_VALUE);
                 assert checksum == d_adler32
 
             # XXX TODO: CRC checksum
@@ -274,10 +275,9 @@ class LzoFile(io.BufferedIOBase):
         return uncompressed
 
     def _read_c(self, n):
-        bytes = self.fileobj.read(n)
-        #print self.adler32
-        self.adler32 = lzo_adler32(bytes, self.adler32)
-        return bytes
+        data = self.fileobj.read(n)
+        self.adler32 = adler32(data, self.adler32)
+        return data
 
     def _read32_c(self):
         return struct.unpack(">I", self._read_c(4))[0]
@@ -297,11 +297,10 @@ class LzoFile(io.BufferedIOBase):
     def _read8(self):
         return ord(self.fileobj.read(1))
 
-    def _write_c(self, bytes):
+    def _write_c(self, data: bytes):
         '''write with checksum, using in write header'''
-        n = self.fileobj.write(bytes)
-        #print hex(self.adler32)
-        self.adler32 = lzo_adler32(bytes, self.adler32)
+        n = self.fileobj.write(data)
+        self.adler32 = adler32(data, self.adler32)
         return n
 
     def _write32_c(self, value):
@@ -360,11 +359,10 @@ class LzoFile(io.BufferedIOBase):
         if len(block) == 0:
             return bytes_write
 
-        d_adler32 = lzo_adler32(block, ADLER32_INIT_VALUE)
+        d_adler32 = adler32(block, ADLER32_INIT_VALUE)
 
-        #print self.method, self.level
-        compressed = compress_block(block, self.method, self.level)
-        c_adler32 = lzo_adler32(compressed, ADLER32_INIT_VALUE)
+        compressed = compress(block)
+        c_adler32 = adler32(compressed, ADLER32_INIT_VALUE)
 
 
         if len(compressed) < len(block):
@@ -399,7 +397,7 @@ class LzoFile(io.BufferedIOBase):
 
         if self.mode != READ:
             import errno
-            raise IOError(errno.EBADF, "read() on write-only GzipFile object")
+            raise IOError(errno.EBADF, "read() on write-only LzoFile object")
 
         while size == -1 or self._buf_len < size:
             block = self._read_block()
@@ -421,7 +419,6 @@ class LzoFile(io.BufferedIOBase):
             block = content[off:off+BLOCK_SIZE]
             off += BLOCK_SIZE
             self._write_block(block)
-            #print 1
         self._write_block(content[off:])
 
         #if off < len(content)
